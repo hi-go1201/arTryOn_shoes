@@ -1,11 +1,11 @@
 let width = 0;
 let height = 0;
 
-let qvga = {width: {exact: 320}, height: {exact: 240}};
+//let qvga = {width: {exact: 320}, height: {exact: 240}};
 
-let vga = {width: {exact: 640}, height: {exact: 480}};
+//let vga = {width: {exact: 640}, height: {exact: 480}};
 
-let resolution = window.innerWidth < 640 ? qvga : vga;
+//let resolution = window.innerWidth < 640 ? qvga : vga;
 
 // whether streaming video from the camera.
 let streaming = false;
@@ -14,13 +14,20 @@ let video = document.getElementById("video");
 let stream = null;
 let vc = null;
 
+let detectFootArea_flag = false;
+let detectFootAreaRect = null;
+
 //let info = document.getElementById('info');
 //let container = document.getElementById('container');
 
 function startCamera() {
   if (streaming) return;
   navigator.mediaDevices.getUserMedia({
-    video: {facingMode: "environment" },
+    video: {
+      facingMode: "environment",
+      width: { min: 800, ideal: 1280, max: 1920 },
+      height: { min: 600, ideal:  720, max: 1080 }
+    },
     audio: false
   })
     .then(function(s) {
@@ -38,6 +45,8 @@ function startCamera() {
       width = video.videoWidth;
       video.setAttribute("width", width);
       video.setAttribute("height", height);
+      document.getElementById("webgl_canvas").setAttribute("width", width);
+      document.getElementById("webgl_canvas").setAttribute("height", height);
       streaming = true;
       vc = new cv.VideoCapture(video);
     }
@@ -59,6 +68,7 @@ function startVideoProcessing() {
   dstC3 = new cv.Mat(height, width, cv.CV_8UC3);
   dstC4 = new cv.Mat(height, width, cv.CV_8UC4);
   requestAnimationFrame(processVideo);
+  addWebGL();
 }
 
 function passThrough(src) {
@@ -537,6 +547,8 @@ function initUI() {
 }
 
 function opencvIsReady() {
+  //console.log(document.getElementById("webgl_canvas").width);
+  //console.log(document.getElementById("webgl_canvas").height);
   console.log('OpenCV.js is ready');
   //info.innerHTML = '';
   //container.className = '';
@@ -558,10 +570,10 @@ function detectFootArea(src) {
   cv.findContours(mat, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
   // approximates each contour to polygon
   //console.log("detectFootArea Start");
+  var cnt_detectFootArea = 0;
   for (let i = 0; i < contours.size(); ++i) {
     let tmp = new cv.Mat();
     let cnt = contours.get(i);
-    let detectFootArea_flag = 0;
     // You can try more different parameters
     //cv.approxPolyDP(cnt, tmp, 3, true);
     //poly.push_back(tmp);
@@ -571,7 +583,8 @@ function detectFootArea(src) {
     //console.log(rotatedRect.size.width);
     if(rotatedRect.size.width > 100 && rotatedRect.size.height > 100) {
       let vertices = cv.RotatedRect.points(rotatedRect);
-      console.log(rotatedRect.angle);
+      detectFootAreaRect = vertices;
+      //console.log(rotatedRect.angle);
       let contoursColor = new cv.Scalar(255, 255, 255);
       let rectangleColor = new cv.Scalar(255, 0, 0, 255);
       //cv.drawContours(src, contours, 0, contoursColor, 1, 8, hierarchy, 100);
@@ -579,8 +592,7 @@ function detectFootArea(src) {
       for (let i = 0; i < 4; i++) {
         cv.line(src, vertices[i], vertices[(i + 1) % 4], rectangleColor, 2, cv.LINE_AA, 0);
       }
-    } else {
-        detectFootArea_flag += 1;
+      cnt_detectFootArea += 1;
     }
       /*
       let rect = cv.boundingRect(cnt);
@@ -594,6 +606,11 @@ function detectFootArea(src) {
       cv.rectangle(dst, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
       */
     cnt.delete(); tmp.delete();
+  }
+  if(cnt_detectFootArea > 0){
+    detectFootArea_flag = true;
+  } else {
+    detectFootArea_flag = false;
   }
     /*
     console.log(contours.size());
@@ -615,92 +632,179 @@ function detectFootArea(src) {
   return src;
 }
 
-/*
-async function main() {
-    // 表示用のCanvas
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    // 画像処理用のオフスクリーンCanvas
-    const offscreen = document.createElement("canvas");
-    const offscreenCtx = offscreen.getContext("2d");
-    // カメラから映像を取得するためのvideo要素
-    const video = document.createElement("video");
-  
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true
-    });
-  
-    video.srcObject = stream;
-    // streamの読み込み完了
-    video.onloadedmetadata = () => {
-      video.play();
-  
-      // Canvasのサイズを映像に合わせる
-      canvas.width = offscreen.width = video.videoWidth;
-      canvas.height = offscreen.height = video.videoHeight;
-  
-      tick();
-    };
-  
-    // 1フレームごとに呼び出される処理
-    function tick() {
-      // カメラの映像をCanvasに描画する
-      offscreenCtx.drawImage(video, 0, 0);
-  
-      // イメージデータを取得する（[r,g,b,a,r,g,b,a,...]のように1次元配列で取得できる）
-      const imageData = offscreenCtx.getImageData(0, 0, offscreen.width, offscreen.height);
-      // imageData.dataはreadonlyなのでfilterメソッドで直接書き換える
-      startVideoProcessing();
-      //filter(imageData);
-      
-      console.log(imageData);
-      const srcData = resizeImageData(imageData, imageSize, imageSize);
-      console.log(srcData);
-      runExample(srcData);
-      
-      // オフスクリーンCanvasを更新する
-      offscreenCtx.putImageData(imageData, 0, 0);
-  
-      // 表示用Canvasに描画する
-      ctx.drawImage(offscreen, 0, 0);
-  
-      // 次フレームを処理する
-      window.requestAnimationFrame(tick);
-    }
-  
-    function filter(imageData) {
-      // 画像処理を行う
-      //let canvas = document.createElement('canvas');
-      let canvas = document.getElementById('canvas');
-      let ctx = canvas.getContext('2d');
-      ctx.putImageData(imageData, 0, 0);
-      let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let src = cv.matFromImageData(imgData);
-      show(src);
-    }
+function addWebGL() {
+  const canvas = document.querySelector('#webgl_canvas');
+  //console.log(canvas.clientWidth);
+  var renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    canvas: canvas,
+    alpha: true
+  });
+  renderer.autoClearColor = false;
+  //renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
-    function show(src) {
-      //let src = cv.imread(inputCanvasId);
-      let dst = new cv.Mat();
-      cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-      cv.imshow('canvas', dst);
-      src.delete();
-      dst.delete();
-    }
+  const fov = 75;
+  const aspect = 2;  // the canvas default
+  const near = 0.1;
+  const far = 5;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  //camera.position.z = 2;
+  camera.position.set(0, 0, 5);
 
-    function resizeImageData (imageData, width, height) {
-      const resizeWidth = width >> 0
-      const resizeHeight = height >> 0
-      const canvas = document.createElement('canvas')
-      canvas.width = resizeWidth
-      canvas.height = resizeHeight
-      const ctx = canvas.getContext('2d')
-      ctx.putImageData(imageData, 0, 0);
-      ctx.scale(resizeWidth / imageData.width, resizeHeight / imageData.height)
-      ctx.drawImage(canvas, 0, 0)
-      return ctx.getImageData(0, 0, resizeWidth, resizeHeight)
-    }
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.target.set(0, 0, 0);
+  controls.update();
 
+  var scene = new THREE.Scene();
+
+  {
+    const color = 0xFFFFFF;
+    const intensity = 1;
+    const light = new THREE.DirectionalLight(color, intensity);
+    light.position.set(-1, 2, 4);
+    scene.add(light);
   }
-  */
-  //main();
+
+  const boxWidth = 1;
+  const boxHeight = 1;
+  const boxDepth = 1;
+  const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+  function makeInstance(geometry, color, x) {
+    const material = new THREE.MeshPhongMaterial({color});
+
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    cube.position.x = x;
+
+    return cube;
+  }
+
+  const cubes = [
+    //makeInstance(geometry, 0x44aa88,  0),
+    //makeInstance(geometry, 0x8844aa, -2),
+    //makeInstance(geometry, 0xaa8844,  2),
+  ];
+
+  //ここで3Dモデルをロード
+  //今回はglTF形式のものを使用
+  var model1 = null;//左足
+  var model2 = null;//右足
+  const loader = new THREE.GLTFLoader();
+  loader.load('./obj/shoes.glb', function (gltf) {
+      model1 = gltf.scene; // THREE.Group
+      model1.name = "shoes1"
+      model1.visible = true;
+      model1.position.set(-1,0,0);
+      scene.add(gltf.scene);
+    },
+    // called while loading is progressing
+    function (xhr) {
+      console.log('shoes1: ' + (xhr.loaded / xhr.total * 100) + '% loaded');
+    },
+    // called when loading has errors
+    function (error) {
+      console.log('An error happened');
+    }
+  );
+
+  loader.load('./obj/shoes.glb', function (gltf) {
+    model2 = gltf.scene; // THREE.Group
+    model2.name = "shoes2"
+    model2.visible = true;
+    model2.position.set(1,0,0);
+    scene.add( gltf.scene );
+    },
+    // called while loading is progressing
+    function (xhr) {
+      console.log('shoes2: ' + (xhr.loaded / xhr.total * 100 ) + '% loaded');
+    },
+    // called when loading has errors
+    function (error) {
+      console.log('An error happened');
+    }
+  );
+
+  //var loader = new THREE.TextureLoader();
+  //var bgTexture = loader.load(
+      //'./obj/male-02-1noCulling.jpg'
+      //document.querySelector('canvas').toDataURL()
+    //);
+  //scene.background = bgTexture;
+
+  function onResize() {
+    // サイズを取得
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    // レンダラーのサイズを調整する
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+
+    // カメラのアスペクト比を正す
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
+
+
+  function render(time) {
+    time *= 0.001;
+
+    // instantiate a loader
+    // マテリアルを作成する
+    //opencv画処理結果をSprite化して適切なサイズの背景に置く事で実現できそう
+    
+    if(sprite!=undefined){scene.remove(sprite);}
+    var texture = new THREE.Texture(document.querySelector('#canvas'));
+    texture.needsUpdate = true; 
+    var material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+    });
+    material.sizeAttenuation = false;
+    material.map.minFilter = THREE.NearestFilter;
+    //console.log(texture.image.height);
+    //console.log(material.map.image.width);
+    //console.log(material.map.image.height);
+    var sprite = new THREE.Sprite(material);
+    //console.log(sprite.material.map.image.width);
+    //console.log(sprite.height);
+    sprite.position.set(0, 0, 0);
+    sprite.scale.set(2.75, 1.5, 1);
+    scene.add(sprite);
+
+    if(model1 != null && model2 != null){
+      //console.log(model);
+      //model1.visible = false;
+      //console.log(detectFootArea_flag);
+      if(detectFootArea_flag == true){
+        model1.visible = true;
+        model2.visible = true;
+      } else if(detectFootArea_flag == false){
+        //model1.visible = false;
+        //model2.visible = false;
+      }
+      //model1.position.set(0,0,0);
+      //model1.rotation.x = time;
+      //model2.position.set(0,0,0);
+      //model2.rotation.x = time;
+    }
+    console.log(detectFootAreaRect);
+    /*
+    cubes.forEach((cube, ndx) => {
+      const speed = 1 + ndx * .1;
+      const rot = time * speed;
+      cube.rotation.x = rot;
+      cube.rotation.y = rot;
+    });
+    */
+    onResize();
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+}
