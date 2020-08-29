@@ -693,7 +693,7 @@ function addWebGL() {
   var model1 = null;//左足
   var model2 = null;//右足
   const loader = new THREE.GLTFLoader();
-  loader.load('./obj/shoes.glb', function (gltf) {
+  loader.load('https://hi-go1201.github.io/arTryOn_shoes/arTryOn/obj/shoes.glb', function (gltf) {
       model1 = gltf.scene; // THREE.Group
       model1.name = "shoes1"
       model1.visible = true;
@@ -710,7 +710,7 @@ function addWebGL() {
     }
   );
 
-  loader.load('./obj/shoes.glb', function (gltf) {
+  loader.load('https://hi-go1201.github.io/arTryOn_shoes/arTryOn/obj/shoes.glb', function (gltf) {
     model2 = gltf.scene; // THREE.Group
     model2.name = "shoes2"
     model2.visible = true;
