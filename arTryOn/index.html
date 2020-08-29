@@ -8,15 +8,22 @@
   <script src="../common/image-loader.js"></script>
   <script src="../common/imagenet.js"></script>
   <script src="./index.js"></script>
+  <script src="./stats.min.js"></script>
   <script src="./three.js"></script>
   <script src="./js/loaders/OBJLoader.js"></script>
   <script src="./js/loaders/MTLLoader.js"></script>
   <script src="./js/loaders/GLTFLoader.js"></script>
   <script src="./js/controls/OrbitControls.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
   <div>
-    <video id="video" class="video" autoplay playsinline="true" style="display: none;"></video>
+    <video id="video" autoplay="1" style="display: none;"></video>
     <canvas id="canvas" class="canvas" style="display: none;"></canvas>
     <canvas id="webgl_canvas"></canvas>
   </div>

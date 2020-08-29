@@ -25,8 +25,8 @@ function startCamera() {
   navigator.mediaDevices.getUserMedia({
     video: {
       facingMode: "environment",
-      width: { min: 800, ideal: 1280, max: 1920 },
-      height: { min: 600, ideal:  720, max: 1080 }
+      //width: { min: 800, ideal: 1280, max: 1920 },
+      //height: { min: 600, ideal:  720, max: 1080 }
     },
     audio: false
   })
@@ -727,6 +727,24 @@ function addWebGL() {
     }
   );
 
+  // 平行光源
+  //const light = new THREE.DirectionalLight(0xFFFFFF);
+  //light.intensity = 2; // 光の強さを倍に
+  //light.position.set(1, 1, 1);
+  //環境光源
+  const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+
+  // シーンに追加
+  scene.add(light);
+
+  // Stats
+  var stats = new Stats();
+  stats.setMode(0);
+  stats.domElement.style.position = "absolute";
+  stats.domElement.style.left = "0px";
+  stats.domElement.style.top  = "0px";
+  document.body.appendChild(stats.dom);
+
   //var loader = new THREE.TextureLoader();
   //var bgTexture = loader.load(
       //'./obj/male-02-1noCulling.jpg'
@@ -772,7 +790,7 @@ function addWebGL() {
     //console.log(sprite.material.map.image.width);
     //console.log(sprite.height);
     sprite.position.set(0, 0, 0);
-    sprite.scale.set(2.75, 1.5, 1);
+    sprite.scale.set(1, 1, 1);
     scene.add(sprite);
 
     if(model1 != null && model2 != null){
@@ -790,8 +808,22 @@ function addWebGL() {
       //model1.rotation.x = time;
       //model2.position.set(0,0,0);
       //model2.rotation.x = time;
+      
+      // スクリーン座標を取得する
+      const project = model1.position.project(camera);
+      const sx = (width / 2) * (+project.x + 1.0);
+      const sy = (height / 2) * (-project.y + 1.0);
+      // スクリーン座標
+      console.log(sx, sy);
+      
+      // ワールド座標を取得する
+      const world = model1.getWorldPosition();
+      // ワールド座標
+      console.log(world);
+
     }
-    console.log(detectFootAreaRect);
+    //console.log(detectFootAreaRect);
+
     /*
     cubes.forEach((cube, ndx) => {
       const speed = 1 + ndx * .1;
@@ -800,6 +832,7 @@ function addWebGL() {
       cube.rotation.y = rot;
     });
     */
+    stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
     onResize();
     renderer.render(scene, camera);
 
