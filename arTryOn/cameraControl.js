@@ -628,6 +628,7 @@ function detectFootArea(src) {
 
 function addWebGL() {
   // init
+  /*
   console.log(document.getElementById("video"));
   const webgl_canvas = document.createElement("canvas");
   webgl_canvas.id = "webgl_canvas";
@@ -701,7 +702,7 @@ function addWebGL() {
       console.log('An error happened');
     }
   );
-    */
+  *//*
   // 平行光源
   const light = new THREE.DirectionalLight(0xFFFFFF);
   light.intensity = 2; // 光の強さを倍に
@@ -732,11 +733,10 @@ function addWebGL() {
     // instantiate a loader
     // マテリアルを作成する
     //opencv画処理結果をSprite化して適切なサイズの背景に置く事で実現できそう
-    
     if(sprite!=undefined){scene.remove(sprite);}
     var texture = new THREE.Texture(document.querySelector('#canvas'));
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
+    //texture.minFilter = THREE.LinearFilter;
+    //texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true; 
     var material = new THREE.SpriteMaterial({
         map: texture,
@@ -752,8 +752,8 @@ function addWebGL() {
     console.log(sprite);
     //console.log(sprite.height);
     sprite.position.set(0, 0, 0);
-    //sprite.center.set(w*0.5, h*0.5);
-    sprite.scale.set(1, 1, 1); //w:17:1.9. h:12.5:1.9
+    //sprite.center.set(0.5, 0.5);
+    sprite.scale.set(4, 4, 1); //w:17:1.9. h:12.5:1.9
     scene.add(sprite);
     /*
     const geometry = new THREE.PlaneGeometry(1, 1);
@@ -792,12 +792,12 @@ function addWebGL() {
       //console.log(world);
 
     }
-    */
+    
     //console.log(detectFootAreaRect);
 
     stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
     
-    onResize();
+    //onResize();
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);
@@ -816,5 +816,218 @@ function addWebGL() {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   }
+  */
 
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+
+  camera = new THREE.PerspectiveCamera( 60, width / height, 1, 2100 );
+  camera.position.z = 1500;
+
+  cameraOrtho = new THREE.OrthographicCamera( - width / 2, width / 2, height / 2, - height / 2, 1, 10 );
+  cameraOrtho.position.z = 10;
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog( 0x000000, 1500, 2100 );
+
+  sceneOrtho = new THREE.Scene();
+
+  //ここで3Dモデルをロード
+  //今回はglTF形式のものを使用
+  var model1 = null;//左足
+  var model2 = null;//右足
+  const loader = new THREE.GLTFLoader();
+  loader.load('./obj/shoes.glb', 
+    function (gltf) {
+      model1 = gltf.scene; // THREE.Group
+      model1.name = "shoes1"
+      model1.visible = true;
+      model1.position.set(-1,0,0);
+      sceneOrtho.add(gltf.scene);
+    },
+    // called while loading is progressing
+    function (xhr) {
+      console.log('shoes1: ' + (xhr.loaded / xhr.total * 100) + '% loaded');
+    },
+    // called when loading has errors
+    function (error) {
+      console.log('An error happened');
+    }
+  );
+
+  loader.load('./obj/shoes.glb',
+    function (gltf) {
+      model2 = gltf.scene; // THREE.Group
+      model2.name = "shoes2"
+      model2.visible = true;
+      model2.position.set(1,0,0);
+      sceneOrtho.add( gltf.scene );
+    },
+    // called while loading is progressing
+    function (xhr) {
+      console.log('shoes2: ' + (xhr.loaded / xhr.total * 100 ) + '% loaded');
+    },
+    // called when loading has errors
+    function (error) {
+      console.log('An error happened');
+    }
+  );
+  
+  // 平行光源
+  const light = new THREE.DirectionalLight(0xFFFFFF);
+  light.intensity = 2; // 光の強さを倍に
+  light.position.set(1, 1, 1);
+  //環境光源
+  //const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+
+  // シーンに追加
+  sceneOrtho.add(light);
+
+  // Stats
+  stats = new Stats();
+  stats.setMode(0);
+  stats.domElement.style.position = "absolute";
+  stats.domElement.style.left = "0px";
+  stats.domElement.style.top  = "0px";
+  document.body.appendChild(stats.dom);
+
+  // create sprites
+  var texture = new THREE.Texture(document.querySelector('#canvas'));
+  texture.needsUpdate = true; 
+  var material = new THREE.SpriteMaterial( { map: texture } );
+
+  var width = material.map.image.width;
+  var height = material.map.image.height;
+
+  spriteC = new THREE.Sprite( material );
+  spriteC.center.set( 0.5, 0.5 );
+  spriteC.scale.set( width, height, 1 );
+  sceneOrtho.add( spriteC );
+  spriteC.position.set( 0, 0, 1 ); // center
+
+  //textureLoader.load( texture, createHUDSprites );
+  /*
+  var mapB = textureLoader.load( "textures/sprite1.png" );
+  mapC = textureLoader.load( "textures/sprite2.png" );
+
+  group = new THREE.Group();
+
+  var materialC = new THREE.SpriteMaterial( { map: mapC, color: 0xffffff, fog: true } );
+  var materialB = new THREE.SpriteMaterial( { map: mapB, color: 0xffffff, fog: true } );
+
+  for ( var a = 0; a < amount; a ++ ) {
+
+    var x = Math.random() - 0.5;
+    var y = Math.random() - 0.5;
+    var z = Math.random() - 0.5;
+
+    var material;
+
+    if ( z < 0 ) {
+
+      material = materialB.clone();
+
+    } else {
+
+      material = materialC.clone();
+      material.color.setHSL( 0.5 * Math.random(), 0.75, 0.5 );
+      material.map.offset.set( - 0.5, - 0.5 );
+      material.map.repeat.set( 2, 2 );
+
+    }
+
+    var sprite = new THREE.Sprite( material );
+
+    sprite.position.set( x, y, z );
+    sprite.position.normalize();
+    sprite.position.multiplyScalar( radius );
+
+    group.add( sprite );
+
+  }
+
+  scene.add( group );
+  */
+  // renderer
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true
+  });
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.autoClear = false; // To allow render overlay on top of sprited sphere
+
+  //document.body.appendChild( renderer.domElement );
+  document.getElementById("main").appendChild(renderer.domElement);
+
+  //
+
+  window.addEventListener( 'resize', onWindowResize, false );
+
+  requestAnimationFrame(render);
+
+}
+
+function onWindowResize() {
+
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  cameraOrtho.left = - width / 2;
+  cameraOrtho.right = width / 2;
+  cameraOrtho.top = height / 2;
+  cameraOrtho.bottom = - height / 2;
+  cameraOrtho.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+function render(time) {
+
+  time *= 0.001;
+  
+// create sprites
+if(spriteC!=undefined){sceneOrtho.remove(spriteC);}
+var texture = new THREE.Texture(document.querySelector('#canvas'));
+texture.needsUpdate = true; 
+var material = new THREE.SpriteMaterial( { map: texture } );
+
+var width = material.map.image.width;
+var height = material.map.image.height;
+
+spriteC = new THREE.Sprite( material );
+spriteC.center.set( 0.5, 0.5 );
+spriteC.scale.set( width, height, 1 );
+sceneOrtho.add( spriteC );
+spriteC.position.set( 0, 0, 1 ); // center
+
+  var sprite = spriteC;
+  var material = sprite.material;
+  var scale = Math.sin( time + sprite.position.x * 0.01 ) * 0.3 + 1.0;
+
+  var imageWidth = 1;
+  var imageHeight = 1;
+
+  if ( material.map && material.map.image && material.map.image.width ) {
+
+    imageWidth = material.map.image.width;
+    imageHeight = material.map.image.height;
+
+  }
+
+  //sprite.material.rotation += 0.1 * ( i / l );
+  //sprite.scale.set( scale * imageWidth, scale * imageHeight, 1.0 );
+
+  stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
+
+  renderer.clear();
+  //renderer.render( scene, camera );
+  renderer.clearDepth();
+  renderer.render( sceneOrtho, cameraOrtho );
+  requestAnimationFrame(render);
 }
