@@ -660,7 +660,7 @@ function addWebGL() {
   const controls = new THREE.OrbitControls(camera, webgl_canvas);
   controls.target.set(0, 0, 0);
   controls.update();
-
+  /*
   //ここで3Dモデルをロード
   //今回はglTF形式のものを使用
   var model1 = null;//左足
@@ -701,7 +701,7 @@ function addWebGL() {
       console.log('An error happened');
     }
   );
-
+    */
   // 平行光源
   const light = new THREE.DirectionalLight(0xFFFFFF);
   light.intensity = 2; // 光の強さを倍に
@@ -751,9 +751,9 @@ function addWebGL() {
     var sprite = new THREE.Sprite(material);
     console.log(sprite);
     //console.log(sprite.height);
-    //sprite.position.set(0, 0, 0);
+    sprite.position.set(0, 0, 0);
     //sprite.center.set(w*0.5, h*0.5);
-    sprite.scale.set(16, 8, 1); //w:17:1.9. h:12.5:1.9
+    sprite.scale.set(1, 1, 1); //w:17:1.9. h:12.5:1.9
     scene.add(sprite);
     /*
     const geometry = new THREE.PlaneGeometry(1, 1);
@@ -762,6 +762,7 @@ function addWebGL() {
     plane.scale.set(w, h, 1);
     scene.add( plane );
     */
+    /*
     if(model1 != null && model2 != null){
       //console.log(model);
       //model1.visible = false;
@@ -791,11 +792,12 @@ function addWebGL() {
       //console.log(world);
 
     }
+    */
     //console.log(detectFootAreaRect);
 
     stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
     
-    //onResize();
+    onResize();
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);
