@@ -45,8 +45,6 @@ function startCamera() {
       width = video.videoWidth;
       video.setAttribute("width", width);
       video.setAttribute("height", height);
-      document.getElementById("webgl_canvas").setAttribute("width", width);
-      document.getElementById("webgl_canvas").setAttribute("height", height);
       streaming = true;
       vc = new cv.VideoCapture(video);
     }
@@ -316,7 +314,6 @@ function stopVideoProcessing() {
 function stopCamera() {
   if (!streaming) return;
   stopVideoProcessing();
-  document.getElementById("canvasOutput").getContext("2d").clearRect(0, 0, width, height);
   video.pause();
   video.srcObject=null;
   stream.getVideoTracks()[0].stop();
@@ -547,8 +544,6 @@ function initUI() {
 }
 
 function opencvIsReady() {
-  //console.log(document.getElementById("webgl_canvas").width);
-  //console.log(document.getElementById("webgl_canvas").height);
   console.log('OpenCV.js is ready');
   //info.innerHTML = '';
   //container.className = '';
@@ -626,24 +621,34 @@ function detectFootArea(src) {
     }
     contours.delete(); hierarchy.delete();
     */
-  //cv.imshow('canvasOutput', mat);
   mat.delete(); contours.delete(); hierarchy.delete();
   //src.delete(); dst.delete(); contours.delete(); hierarchy.delete(); poly.delete(); hull.delete();
   return src;
 }
 
 function addWebGL() {
-  const canvas = document.querySelector('#webgl_canvas');
-  //console.log(canvas.clientWidth);
-  var renderer = new THREE.WebGLRenderer({
+  // init
+  console.log(document.getElementById("video"));
+  const webgl_canvas = document.createElement("canvas");
+  webgl_canvas.id = "webgl_canvas";
+  webgl_canvas.width = document.getElementById("video").width;
+  webgl_canvas.height = document.getElementById("video").height;
+  document.getElementById("main").appendChild(webgl_canvas);
+
+  // レンダラーを作成
+  const renderer = new THREE.WebGLRenderer({
+    canvas: webgl_canvas,
     antialias: true,
-    canvas: canvas,
     alpha: true
   });
-  renderer.autoClearColor = false;
-  //renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
+  // シーンを作成
+  const scene = new THREE.Scene();
+
+  //const canvas = document.querySelector('#webgl_canvas');
+  //console.log(canvas.clientWidth);
+    
+  // カメラを作成
   const fov = 75;
   const aspect = 2;  // the canvas default
   const near = 0.1;
@@ -651,49 +656,18 @@ function addWebGL() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   //camera.position.z = 2;
   camera.position.set(0, 0, 5);
-
-  const controls = new THREE.OrbitControls(camera, canvas);
+  // カメラ制御
+  const controls = new THREE.OrbitControls(camera, webgl_canvas);
   controls.target.set(0, 0, 0);
   controls.update();
-
-  var scene = new THREE.Scene();
-
-  {
-    const color = 0xFFFFFF;
-    const intensity = 1;
-    const light = new THREE.DirectionalLight(color, intensity);
-    light.position.set(-1, 2, 4);
-    scene.add(light);
-  }
-
-  const boxWidth = 1;
-  const boxHeight = 1;
-  const boxDepth = 1;
-  const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-
-  function makeInstance(geometry, color, x) {
-    const material = new THREE.MeshPhongMaterial({color});
-
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    cube.position.x = x;
-
-    return cube;
-  }
-
-  const cubes = [
-    //makeInstance(geometry, 0x44aa88,  0),
-    //makeInstance(geometry, 0x8844aa, -2),
-    //makeInstance(geometry, 0xaa8844,  2),
-  ];
 
   //ここで3Dモデルをロード
   //今回はglTF形式のものを使用
   var model1 = null;//左足
   var model2 = null;//右足
   const loader = new THREE.GLTFLoader();
-  loader.load('./obj/shoes.glb', function (gltf) {
+  loader.load('./obj/shoes.glb', 
+    function (gltf) {
       model1 = gltf.scene; // THREE.Group
       model1.name = "shoes1"
       model1.visible = true;
@@ -710,12 +684,13 @@ function addWebGL() {
     }
   );
 
-  loader.load('./obj/shoes.glb', function (gltf) {
-    model2 = gltf.scene; // THREE.Group
-    model2.name = "shoes2"
-    model2.visible = true;
-    model2.position.set(1,0,0);
-    scene.add( gltf.scene );
+  loader.load('./obj/shoes.glb',
+    function (gltf) {
+      model2 = gltf.scene; // THREE.Group
+      model2.name = "shoes2"
+      model2.visible = true;
+      model2.position.set(1,0,0);
+      scene.add( gltf.scene );
     },
     // called while loading is progressing
     function (xhr) {
@@ -728,11 +703,11 @@ function addWebGL() {
   );
 
   // 平行光源
-  //const light = new THREE.DirectionalLight(0xFFFFFF);
-  //light.intensity = 2; // 光の強さを倍に
-  //light.position.set(1, 1, 1);
+  const light = new THREE.DirectionalLight(0xFFFFFF);
+  light.intensity = 2; // 光の強さを倍に
+  light.position.set(1, 1, 1);
   //環境光源
-  const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+  //const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
 
   // シーンに追加
   scene.add(light);
@@ -745,28 +720,12 @@ function addWebGL() {
   stats.domElement.style.top  = "0px";
   document.body.appendChild(stats.dom);
 
-  //var loader = new THREE.TextureLoader();
-  //var bgTexture = loader.load(
-      //'./obj/male-02-1noCulling.jpg'
-      //document.querySelector('canvas').toDataURL()
-    //);
-  //scene.background = bgTexture;
-
-  function onResize() {
-    // サイズを取得
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-
-    // レンダラーのサイズを調整する
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(width, height);
-
-    // カメラのアスペクト比を正す
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-  }
-
-
+  renderer.autoClearColor = false;
+  //renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(webgl_canvas.width, webgl_canvas.height);
+  requestAnimationFrame(render);
+  
+  // 毎フレーム時に実行されるループイベント
   function render(time) {
     time *= 0.001;
 
@@ -776,23 +735,33 @@ function addWebGL() {
     
     if(sprite!=undefined){scene.remove(sprite);}
     var texture = new THREE.Texture(document.querySelector('#canvas'));
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true; 
     var material = new THREE.SpriteMaterial({
         map: texture,
-        transparent: true,
+        //transparent: true,
     });
-    material.sizeAttenuation = false;
-    material.map.minFilter = THREE.NearestFilter;
+    var w = material.map.image.width, h = material.map.image.height;
+    //material.sizeAttenuation = false;
+    //material.map.minFilter = THREE.NearestFilter;
     //console.log(texture.image.height);
     //console.log(material.map.image.width);
     //console.log(material.map.image.height);
     var sprite = new THREE.Sprite(material);
-    //console.log(sprite.material.map.image.width);
+    console.log(sprite);
     //console.log(sprite.height);
-    sprite.position.set(0, 0, 0);
-    sprite.scale.set(1, 1, 1);
+    //sprite.position.set(0, 0, 0);
+    //sprite.center.set(w*0.5, h*0.5);
+    sprite.scale.set(16, 8, 1); //w:17:1.9. h:12.5:1.9
     scene.add(sprite);
-
+    /*
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const material2 = new THREE.MeshPhongMaterial( { map:texture } );
+    const plane = new THREE.Mesh( geometry, material2 );
+    plane.scale.set(w, h, 1);
+    scene.add( plane );
+    */
     if(model1 != null && model2 != null){
       //console.log(model);
       //model1.visible = false;
@@ -814,30 +783,36 @@ function addWebGL() {
       const sx = (width / 2) * (+project.x + 1.0);
       const sy = (height / 2) * (-project.y + 1.0);
       // スクリーン座標
-      console.log(sx, sy);
+      //console.log(sx, sy);
       
       // ワールド座標を取得する
       const world = model1.getWorldPosition();
       // ワールド座標
-      console.log(world);
+      //console.log(world);
 
     }
     //console.log(detectFootAreaRect);
 
-    /*
-    cubes.forEach((cube, ndx) => {
-      const speed = 1 + ndx * .1;
-      const rot = time * speed;
-      cube.rotation.x = rot;
-      cube.rotation.y = rot;
-    });
-    */
     stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
-    onResize();
+    
+    //onResize();
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);
   }
 
-  requestAnimationFrame(render);
+  function onResize() {
+    // サイズを取得
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // レンダラーのサイズを調整する
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+
+    // カメラのアスペクト比を正す
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
+
 }
