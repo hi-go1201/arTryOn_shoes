@@ -570,10 +570,13 @@ function detectFootArea(src) {
     //hull.push_back(tmp);
     let rotatedRect = cv.minAreaRect(cnt);
     //console.log(rotatedRect.size.width);
-    if(rotatedRect.size.width > 100 && rotatedRect.size.height > 100) {
+    if((rotatedRect.size.height > rotatedRect.size.width*2) && rotatedRect.size.width > 100 && rotatedRect.size.height > 100) {
       let vertices = cv.RotatedRect.points(rotatedRect);
       detectFootAreaRect = vertices;
       //console.log(rotatedRect.angle);
+      console.log("rotatedRect.size.width:" + rotatedRect.size.width);
+      console.log("rotatedRect.size.height:" + rotatedRect.size.height);
+
       let contoursColor = new cv.Scalar(255, 255, 255);
       let rectangleColor = new cv.Scalar(255, 0, 0, 255);
       //cv.drawContours(src, contours, 0, contoursColor, 1, 8, hierarchy, 100);
