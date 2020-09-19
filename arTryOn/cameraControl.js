@@ -1,12 +1,6 @@
 let width = 0;
 let height = 0;
 
-//let qvga = {width: {exact: 320}, height: {exact: 240}};
-
-//let vga = {width: {exact: 640}, height: {exact: 480}};
-
-//let resolution = window.innerWidth < 640 ? qvga : vga;
-
 // whether streaming video from the camera.
 let streaming = false;
 
@@ -628,210 +622,22 @@ function detectFootArea(src) {
 
 function addWebGL() {
   // init
-  /*
-  console.log(document.getElementById("video"));
-  const webgl_canvas = document.createElement("canvas");
-  webgl_canvas.id = "webgl_canvas";
-  webgl_canvas.width = document.getElementById("video").width;
-  webgl_canvas.height = document.getElementById("video").height;
-  document.getElementById("main").appendChild(webgl_canvas);
-
-  // レンダラーを作成
-  const renderer = new THREE.WebGLRenderer({
-    canvas: webgl_canvas,
-    antialias: true,
-    alpha: true
-  });
-
-  // シーンを作成
-  const scene = new THREE.Scene();
-
-  //const canvas = document.querySelector('#webgl_canvas');
-  //console.log(canvas.clientWidth);
-    
-  // カメラを作成
-  const fov = 75;
-  const aspect = 2;  // the canvas default
-  const near = 0.1;
-  const far = 5;
-  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  //camera.position.z = 2;
-  camera.position.set(0, 0, 5);
-  // カメラ制御
-  const controls = new THREE.OrbitControls(camera, webgl_canvas);
-  controls.target.set(0, 0, 0);
-  controls.update();
-  /*
-  //ここで3Dモデルをロード
-  //今回はglTF形式のものを使用
-  var model1 = null;//左足
-  var model2 = null;//右足
-  const loader = new THREE.GLTFLoader();
-  loader.load('./obj/shoes.glb', 
-    function (gltf) {
-      model1 = gltf.scene; // THREE.Group
-      model1.name = "shoes1"
-      model1.visible = true;
-      model1.position.set(-1,0,0);
-      scene.add(gltf.scene);
-    },
-    // called while loading is progressing
-    function (xhr) {
-      console.log('shoes1: ' + (xhr.loaded / xhr.total * 100) + '% loaded');
-    },
-    // called when loading has errors
-    function (error) {
-      console.log('An error happened');
-    }
-  );
-
-  loader.load('./obj/shoes.glb',
-    function (gltf) {
-      model2 = gltf.scene; // THREE.Group
-      model2.name = "shoes2"
-      model2.visible = true;
-      model2.position.set(1,0,0);
-      scene.add( gltf.scene );
-    },
-    // called while loading is progressing
-    function (xhr) {
-      console.log('shoes2: ' + (xhr.loaded / xhr.total * 100 ) + '% loaded');
-    },
-    // called when loading has errors
-    function (error) {
-      console.log('An error happened');
-    }
-  );
-  *//*
-  // 平行光源
-  const light = new THREE.DirectionalLight(0xFFFFFF);
-  light.intensity = 2; // 光の強さを倍に
-  light.position.set(1, 1, 1);
-  //環境光源
-  //const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
-
-  // シーンに追加
-  scene.add(light);
+  var width = window.innerWidth;
+  var height = window.innerHeight;
 
   // Stats
-  var stats = new Stats();
+  const stats = new Stats();
   stats.setMode(0);
   stats.domElement.style.position = "absolute";
   stats.domElement.style.left = "0px";
   stats.domElement.style.top  = "0px";
   document.body.appendChild(stats.dom);
 
-  renderer.autoClearColor = false;
-  //renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(webgl_canvas.width, webgl_canvas.height);
-  requestAnimationFrame(render);
-  
-  // 毎フレーム時に実行されるループイベント
-  function render(time) {
-    time *= 0.001;
-
-    // instantiate a loader
-    // マテリアルを作成する
-    //opencv画処理結果をSprite化して適切なサイズの背景に置く事で実現できそう
-    if(sprite!=undefined){scene.remove(sprite);}
-    var texture = new THREE.Texture(document.querySelector('#canvas'));
-    //texture.minFilter = THREE.LinearFilter;
-    //texture.magFilter = THREE.LinearFilter;
-    texture.needsUpdate = true; 
-    var material = new THREE.SpriteMaterial({
-        map: texture,
-        //transparent: true,
-    });
-    var w = material.map.image.width, h = material.map.image.height;
-    //material.sizeAttenuation = false;
-    //material.map.minFilter = THREE.NearestFilter;
-    //console.log(texture.image.height);
-    //console.log(material.map.image.width);
-    //console.log(material.map.image.height);
-    var sprite = new THREE.Sprite(material);
-    console.log(sprite);
-    //console.log(sprite.height);
-    sprite.position.set(0, 0, 0);
-    //sprite.center.set(0.5, 0.5);
-    sprite.scale.set(4, 4, 1); //w:17:1.9. h:12.5:1.9
-    scene.add(sprite);
-    /*
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const material2 = new THREE.MeshPhongMaterial( { map:texture } );
-    const plane = new THREE.Mesh( geometry, material2 );
-    plane.scale.set(w, h, 1);
-    scene.add( plane );
-    */
-    /*
-    if(model1 != null && model2 != null){
-      //console.log(model);
-      //model1.visible = false;
-      //console.log(detectFootArea_flag);
-      if(detectFootArea_flag == true){
-        model1.visible = true;
-        model2.visible = true;
-      } else if(detectFootArea_flag == false){
-        //model1.visible = false;
-        //model2.visible = false;
-      }
-      //model1.position.set(0,0,0);
-      //model1.rotation.x = time;
-      //model2.position.set(0,0,0);
-      //model2.rotation.x = time;
-      
-      // スクリーン座標を取得する
-      const project = model1.position.project(camera);
-      const sx = (width / 2) * (+project.x + 1.0);
-      const sy = (height / 2) * (-project.y + 1.0);
-      // スクリーン座標
-      //console.log(sx, sy);
-      
-      // ワールド座標を取得する
-      const world = model1.getWorldPosition();
-      // ワールド座標
-      //console.log(world);
-
-    }
-    
-    //console.log(detectFootAreaRect);
-
-    stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
-    
-    //onResize();
-    renderer.render(scene, camera);
-
-    requestAnimationFrame(render);
-  }
-
-  function onResize() {
-    // サイズを取得
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    // レンダラーのサイズを調整する
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(width, height);
-
-    // カメラのアスペクト比を正す
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-  }
-  */
-
-  var width = window.innerWidth;
-  var height = window.innerHeight;
-
-  camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
   // Set up the main camera
+  const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
   camera.position.z = 5;
-  //camera.position.z = 1500;
-  //camera.position.z = 2;
-  //camera.position.set(- 1.8, 0.6, 2.7);
 
-  //cameraOrtho = new THREE.OrthographicCamera( - width / 2, width / 2, height / 2, - height / 2, 1, 10 );
-  //cameraOrtho.position.z = 10;
-
-  scene = new THREE.Scene();
+  const scene = new THREE.Scene();
 
   // Create lights
   var light = new THREE.PointLight(0xEEEEEE);
@@ -839,14 +645,11 @@ function addWebGL() {
   scene.add(light);
   var lightAmb = new THREE.AmbientLight(0x777777);
   scene.add(lightAmb);
-  //scene.fog = new THREE.Fog( 0x000000, 1500, 2100 );
-
   // 平行光源
   var lightDir = new THREE.DirectionalLight(0xFFFFFF);
   lightDir.intensity = 5; // 光の強さを倍に
   lightDir.position.set(1, 1, 1);
   scene.add(lightDir);
-  //sceneOrtho = new THREE.Scene();
 
   //ここで3Dモデルをロード
   //今回はglTF形式のものを使用
@@ -890,99 +693,9 @@ function addWebGL() {
       console.log('An error happened');
     }
   );
-  
-  // 平行光源
-  //const light = new THREE.DirectionalLight(0xFFFFFF);
-  //light.intensity = 2; // 光の強さを倍に
-  //light.position.set(1, 1, 1);
-  //環境光源
-  //const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
 
-  // シーンに追加
-  //sceneOrtho.add(light);
-
-  // Stats
-  stats = new Stats();
-  stats.setMode(0);
-  stats.domElement.style.position = "absolute";
-  stats.domElement.style.left = "0px";
-  stats.domElement.style.top  = "0px";
-  document.body.appendChild(stats.dom);
-
-  // create sprites
-  var texture = new THREE.Texture(document.querySelector('#canvas'));
-  texture.needsUpdate = true;
-  scene.background = texture;
-  // Set the repeat and offset properties of the background texture
-  // to keep the image's aspect correct.
-  // Note the image may not have loaded yet.
-  var canvasAspect = window.innerWidth / window.innerHeight;
-  var imageAspect = texture.image ? texture.image.width / texture.image.height : 1;
-  var aspect = imageAspect / canvasAspect;
-
-  texture.offset.x = aspect > 1 ? (1 - 1 / aspect) / 2 : 0;
-  texture.repeat.x = aspect > 1 ? 1 / aspect : 1;
-
-  texture.offset.y = aspect > 1 ? 0 : (1 - aspect) / 2;
-  texture.repeat.y = aspect > 1 ? 1 : aspect;
-
-  var material = new THREE.SpriteMaterial( { map: texture } );
-
-  var width = material.map.image.width;
-  var height = material.map.image.height;
-
-  spriteC = new THREE.Sprite( material );
-  spriteC.center.set( 0.5, 0.5 );
-  spriteC.scale.set( width, height, 1 );
-  //sceneOrtho.add( spriteC );
-  spriteC.position.set( 0, 0, 1 ); // center
-
-  //textureLoader.load( texture, createHUDSprites );
-  /*
-  var mapB = textureLoader.load( "textures/sprite1.png" );
-  mapC = textureLoader.load( "textures/sprite2.png" );
-
-  group = new THREE.Group();
-
-  var materialC = new THREE.SpriteMaterial( { map: mapC, color: 0xffffff, fog: true } );
-  var materialB = new THREE.SpriteMaterial( { map: mapB, color: 0xffffff, fog: true } );
-
-  for ( var a = 0; a < amount; a ++ ) {
-
-    var x = Math.random() - 0.5;
-    var y = Math.random() - 0.5;
-    var z = Math.random() - 0.5;
-
-    var material;
-
-    if ( z < 0 ) {
-
-      material = materialB.clone();
-
-    } else {
-
-      material = materialC.clone();
-      material.color.setHSL( 0.5 * Math.random(), 0.75, 0.5 );
-      material.map.offset.set( - 0.5, - 0.5 );
-      material.map.repeat.set( 2, 2 );
-
-    }
-
-    var sprite = new THREE.Sprite( material );
-
-    sprite.position.set( x, y, z );
-    sprite.position.normalize();
-    sprite.position.multiplyScalar( radius );
-
-    group.add( sprite );
-
-  }
-
-  scene.add( group );
-  */
   // renderer
-
-  renderer = new THREE.WebGLRenderer({
+  var renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true
   });
@@ -997,11 +710,6 @@ function addWebGL() {
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 0, 0);
   controls.update();
-  //const controls2 = new THREE.OrbitControls(camera, renderer.domElement);
-  //controls2.target.set(0, 0, 0);
-  //controls2.update();
-
-  //
 
   window.addEventListener( 'resize', onWindowResize, false );
 
@@ -1009,114 +717,86 @@ function addWebGL() {
 
 
 
-function onWindowResize() {
+  function onWindowResize() {
 
-  var width = window.innerWidth;
-  var height = window.innerHeight;
+    var resize_width = window.innerWidth;
+    var resize_height = window.innerHeight;
 
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  /*
-  cameraOrtho.left = - width / 2;
-  cameraOrtho.right = width / 2;
-  cameraOrtho.top = height / 2;
-  cameraOrtho.bottom = - height / 2;
-  cameraOrtho.updateProjectionMatrix();
-  */
-  renderer.setSize( window.innerWidth, window.innerHeight );
-
-}
-
-function render(time) {
-
-  time *= 0.001;
-  var texture = new THREE.Texture(document.querySelector('#canvas'));
-  texture.needsUpdate = true; 
-  scene.background = texture;
-  // Set the repeat and offset properties of the background texture
-  // to keep the image's aspect correct.
-  // Note the image may not have loaded yet.
-  const canvasAspect = window.innerWidth / window.innerHeight;
-  const imageAspect = texture.image ? texture.image.width / texture.image.height : 1;
-  const aspect = imageAspect / canvasAspect;
-
-  texture.offset.x = aspect > 1 ? (1 - 1 / aspect) / 2 : 0;
-  texture.repeat.x = aspect > 1 ? 1 / aspect : 1;
-
-  texture.offset.y = aspect > 1 ? 0 : (1 - aspect) / 2;
-  texture.repeat.y = aspect > 1 ? 1 : aspect;
-
-// create sprites
-/*
-if(spriteC!=undefined){sceneOrtho.remove(spriteC);}
-var texture = new THREE.Texture(document.querySelector('#canvas'));
-texture.needsUpdate = true; 
-scene.background = texture;
-var material = new THREE.SpriteMaterial( { map: texture } );
-
-var width = material.map.image.width;
-var height = material.map.image.height;
-
-spriteC = new THREE.Sprite( material );
-spriteC.center.set( 0.5, 0.5 );
-spriteC.scale.set( width, height, 1 );
-//sceneOrtho.add( spriteC );
-spriteC.position.set( 0, 0, 1 ); // center
-
-  var sprite = spriteC;
-  var material = sprite.material;
-
-  var imageWidth = 1;
-  var imageHeight = 1;
-
-  if ( material.map && material.map.image && material.map.image.width ) {
-
-    imageWidth = material.map.image.width;
-    imageHeight = material.map.image.height;
+    camera.aspect = resize_width / resize_height;
+    camera.updateProjectionMatrix();
+  
+    renderer.setSize( window.innerWidth, window.innerHeight );
 
   }
-*/
-  //sprite.material.rotation += 0.1 * ( i / l );
-  //sprite.scale.set( scale * imageWidth, scale * imageHeight, 1.0 );
-  /*
-  if(model1 != null && model2 != null){
-    //console.log(model);
-    //model1.visible = false;
-    //console.log(detectFootArea_flag);
-    if(detectFootArea_flag == true){
-      model1.visible = true;
-      model2.visible = true;
-    } else if(detectFootArea_flag == false){
+
+  function render(time) {
+
+    time *= 0.001;
+
+    // create camera image
+    var texture = new THREE.Texture(document.querySelector('#canvas'));
+    texture.needsUpdate = true; 
+    scene.background = texture;
+    // Set the repeat and offset properties of the background texture
+    // to keep the image's aspect correct.
+    // Note the image may not have loaded yet.
+    const canvasAspect = window.innerWidth / window.innerHeight;
+    const imageAspect = texture.image ? texture.image.width / texture.image.height : 1;
+    const aspect = imageAspect / canvasAspect;
+
+    texture.offset.x = aspect > 1 ? (1 - 1 / aspect) / 2 : 0;
+    texture.repeat.x = aspect > 1 ? 1 / aspect : 1;
+
+    texture.offset.y = aspect > 1 ? 0 : (1 - aspect) / 2;
+    texture.repeat.y = aspect > 1 ? 1 : aspect;
+
+    //sprite sample
+    //var material = new THREE.SpriteMaterial( { map: texture } );
+    //var width = material.map.image.width;
+    //var height = material.map.image.height;
+    //sprite = new THREE.Sprite( material );
+    //sprite.center.set(0.5, 0.5);
+    //sprite.scale.set(width, height, 1);
+    //sprite.position.set(0, 0, 1); // center
+
+    /*
+    if(model1 != null && model2 != null){
+      //console.log(model);
       //model1.visible = false;
-      //model2.visible = false;
+      //console.log(detectFootArea_flag);
+      if(detectFootArea_flag == true){
+        model1.visible = true;
+        model2.visible = true;
+      } else if(detectFootArea_flag == false){
+        //model1.visible = false;
+        //model2.visible = false;
+      }
+      //model1.position.set(0,0,0);
+      //model1.rotation.x = time;
+      //model2.position.set(0,0,0);
+      //model2.rotation.x = time;
+    
+      // スクリーン座標を取得する
+      const project = model1.position.project(camera);
+      const sx = (width / 2) * (+project.x + 1.0);
+      const sy = (height / 2) * (-project.y + 1.0);
+      // スクリーン座標
+      console.log(sx, sy);
+    
+      // ワールド座標を取得する
+      const world = model1.getWorldPosition();
+      // ワールド座標
+      console.log(world);
+
     }
-    //model1.position.set(0,0,0);
-    //model1.rotation.x = time;
-    //model2.position.set(0,0,0);
-    //model2.rotation.x = time;
-    
-    // スクリーン座標を取得する
-    const project = model1.position.project(camera);
-    const sx = (width / 2) * (+project.x + 1.0);
-    const sy = (height / 2) * (-project.y + 1.0);
-    // スクリーン座標
-    console.log(sx, sy);
-    
-    // ワールド座標を取得する
-    const world = model1.getWorldPosition();
-    // ワールド座標
-    console.log(world);
+    */
 
+    stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
+
+    renderer.clear();
+    renderer.clearDepth();
+    renderer.render( scene, camera );
+    requestAnimationFrame(render);
   }
-  */
-
-  stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
-
-  renderer.clear();
-  //renderer.render( scene, camera );
-  renderer.clearDepth();
-  //renderer.render( sceneOrtho, cameraOrtho );
-  renderer.render( scene, camera );
-  requestAnimationFrame(render);
-}
+  
 }
