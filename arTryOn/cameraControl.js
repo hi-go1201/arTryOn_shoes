@@ -10,6 +10,7 @@ let vc = null;
 
 let detectFootArea_flag = false;
 let detectFootAreaRect = null;
+let x0, x1, y0, y1 = 0.0;
 
 //let info = document.getElementById('info');
 //let container = document.getElementById('container');
@@ -570,12 +571,33 @@ function detectFootArea(src) {
     //hull.push_back(tmp);
     let rotatedRect = cv.minAreaRect(cnt);
     //console.log(rotatedRect.size.width);
-    if((rotatedRect.size.height > rotatedRect.size.width*2) && rotatedRect.size.width > 100 && rotatedRect.size.height > 100) {
+    if( (rotatedRect.size.height > rotatedRect.size.width*2)
+        && rotatedRect.size.width > 100
+        && rotatedRect.size.height > 100
+        && rotatedRect.size.width < width
+        && rotatedRect.size.height < height
+      ) {
       let vertices = cv.RotatedRect.points(rotatedRect);
-      detectFootAreaRect = vertices;
+      
+      detectFootAreaRect = rotatedRect;
       //console.log(rotatedRect.angle);
+      //console.log(rotatedRect);
+      
+      x0 = rotatedRect.center.x - rotatedRect.size.width*0.5;
+      x1 = rotatedRect.center.x + rotatedRect.size.width*0.5;
+      y0 = rotatedRect.center.y - rotatedRect.size.height*0.5;
+      y1 = rotatedRect.center.y + rotatedRect.size.height*0.5;
+
+      console.log("rotatedRect.pos.x0:" + x0);
+      console.log("rotatedRect.pos.y0:" + y0);
+      console.log("rotatedRect.pos.x1:" + x1);
+      console.log("rotatedRect.pos.y1:" + y1);
       console.log("rotatedRect.size.width:" + rotatedRect.size.width);
       console.log("rotatedRect.size.height:" + rotatedRect.size.height);
+      console.log("rotatedRect.angle:" + rotatedRect.angle);
+      
+      //console.log("rotatedRect.size.width:" + rotatedRect.size.width);
+      //console.log("rotatedRect.size.height:" + rotatedRect.size.height);
 
       let contoursColor = new cv.Scalar(255, 255, 255);
       let rectangleColor = new cv.Scalar(255, 0, 0, 255);
@@ -658,14 +680,18 @@ function addWebGL() {
   //今回はglTF形式のものを使用
   var model1 = null;//左足
   var model2 = null;//右足
+
   const loader = new THREE.GLTFLoader();
   loader.load('./obj/shoes.glb', 
     function (gltf) {
       model1 = gltf.scene; // THREE.Group
       model1.name = "shoes1"
-      model1.visible = true;
-      model1.scale.set(1.0, 1.0, 1.0);
+      model1.visible = false;
+      model1.scale.set(0.6, 0.6, 0.6);
       model1.position.set(-0.5, 0.0, 0.0);
+      model1.rotation.x = -1.4;
+      model1.rotation.y = 0;
+      model1.rotation.z = 3.3;
       scene.add(model1);
     },
     // called while loading is progressing
@@ -682,9 +708,12 @@ function addWebGL() {
     function (gltf) {
       model2 = gltf.scene; // THREE.Group
       model2.name = "shoes2"
-      model2.visible = true;
+      model2.visible = false;
       model2.scale.set(1.0, 1.0, 1.0);
       model2.position.set(0.5, 0.0, 0.0);
+      model2.rotation.x = -1.4;
+      model2.rotation.y = 0;
+      model2.rotation.z = 3.3;
       scene.add(model2);
     },
     // called while loading is progressing
@@ -762,37 +791,46 @@ function addWebGL() {
     //sprite.scale.set(width, height, 1);
     //sprite.position.set(0, 0, 1); // center
 
-    /*
+    
     if(model1 != null && model2 != null){
       //console.log(model);
       //model1.visible = false;
       //console.log(detectFootArea_flag);
       if(detectFootArea_flag == true){
+        //スクリーン座標逆変換
+        let detectFootArea_sx = detectFootAreaRect.center.x;
+        let detectFootArea_sy = detectFootAreaRect.center.y;
+        let project_x = (detectFootArea_sx * 2 / width) -1.0 -texture.offset.x;
+        let project_y = -(detectFootArea_sy * 2 / height) +1.0 +texture.offset.y;
+        console.log(project_x);
+        console.log(project_y);
+        model1.position.set(project_x, project_y, 0.0);
+        //足の抽出角度に応じて3Dモデル回転
+        console.log(THREE.Math.degToRad(detectFootAreaRect.angle));
+        model1.rotation.y = THREE.Math.degToRad(detectFootAreaRect.angle);
         model1.visible = true;
-        model2.visible = true;
+        //model2.visible = true;
       } else if(detectFootArea_flag == false){
-        //model1.visible = false;
+        model1.visible = false;
         //model2.visible = false;
       }
-      //model1.position.set(0,0,0);
-      //model1.rotation.x = time;
-      //model2.position.set(0,0,0);
-      //model2.rotation.x = time;
     
       // スクリーン座標を取得する
       const project = model1.position.project(camera);
       const sx = (width / 2) * (+project.x + 1.0);
       const sy = (height / 2) * (-project.y + 1.0);
       // スクリーン座標
-      console.log(sx, sy);
+      //console.log("screen pos:" + sx, sy);
+      //model1.position.set(-0.5, 0.0, 0.0);
+
     
       // ワールド座標を取得する
-      const world = model1.getWorldPosition();
+      //const world = model1.getWorldPosition();
       // ワールド座標
-      console.log(world);
+      //console.log(world);
 
     }
-    */
+    
 
     stats.update(); // 毎フレームごとにstats.update()を呼ぶ必要がある。
 
