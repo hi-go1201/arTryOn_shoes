@@ -687,7 +687,7 @@ function addWebGL() {
       model1 = gltf.scene; // THREE.Group
       model1.name = "shoes1"
       model1.visible = false;
-      model1.scale.set(0.4, 0.4, 0.4);
+      model1.scale.set(0.3, 0.3, 0.3);
       model1.position.set(-0.5, 0.0, 0.0);
       model1.rotation.x = -1.4;
       model1.rotation.y = 0;
