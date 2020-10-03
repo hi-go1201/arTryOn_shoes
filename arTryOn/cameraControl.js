@@ -588,13 +588,13 @@ function detectFootArea(src) {
       y0 = rotatedRect.center.y - rotatedRect.size.height*0.5;
       y1 = rotatedRect.center.y + rotatedRect.size.height*0.5;
 
-      console.log("rotatedRect.pos.x0:" + x0);
-      console.log("rotatedRect.pos.y0:" + y0);
-      console.log("rotatedRect.pos.x1:" + x1);
-      console.log("rotatedRect.pos.y1:" + y1);
-      console.log("rotatedRect.size.width:" + rotatedRect.size.width);
-      console.log("rotatedRect.size.height:" + rotatedRect.size.height);
-      console.log("rotatedRect.angle:" + rotatedRect.angle);
+      //console.log("rotatedRect.pos.x0:" + x0);
+      //console.log("rotatedRect.pos.y0:" + y0);
+      //console.log("rotatedRect.pos.x1:" + x1);
+      //console.log("rotatedRect.pos.y1:" + y1);
+      //console.log("rotatedRect.size.width:" + rotatedRect.size.width);
+      //console.log("rotatedRect.size.height:" + rotatedRect.size.height);
+      //console.log("rotatedRect.angle:" + rotatedRect.angle);
       
       //console.log("rotatedRect.size.width:" + rotatedRect.size.width);
       //console.log("rotatedRect.size.height:" + rotatedRect.size.height);
@@ -682,12 +682,12 @@ function addWebGL() {
   var model2 = null;//右足
 
   const loader = new THREE.GLTFLoader();
-  loader.load('./obj/shoes.glb', 
+  loader.load('./obj/BasketballShoe.glb', 
     function (gltf) {
       model1 = gltf.scene; // THREE.Group
       model1.name = "shoes1"
       model1.visible = false;
-      model1.scale.set(0.6, 0.6, 0.6);
+      model1.scale.set(0.4, 0.4, 0.4);
       model1.position.set(-0.5, 0.0, 0.0);
       model1.rotation.x = -1.4;
       model1.rotation.y = 0;
@@ -808,6 +808,9 @@ function addWebGL() {
         //足の抽出角度に応じて3Dモデル回転
         console.log(THREE.Math.degToRad(detectFootAreaRect.angle));
         model1.rotation.y = THREE.Math.degToRad(detectFootAreaRect.angle);
+        
+        // ToDo:スマホのセンサ情報用いてスマホの傾きに応じて3Dモデルの奥行きの角度調整
+        
         model1.visible = true;
         //model2.visible = true;
       } else if(detectFootArea_flag == false){
@@ -816,9 +819,9 @@ function addWebGL() {
       }
     
       // スクリーン座標を取得する
-      const project = model1.position.project(camera);
-      const sx = (width / 2) * (+project.x + 1.0);
-      const sy = (height / 2) * (-project.y + 1.0);
+      //const project = model1.position.project(camera);
+      //const sx = (width / 2) * (+project.x + 1.0);
+      //const sy = (height / 2) * (-project.y + 1.0);
       // スクリーン座標
       //console.log("screen pos:" + sx, sy);
       //model1.position.set(-0.5, 0.0, 0.0);
